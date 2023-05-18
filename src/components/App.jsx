@@ -1,58 +1,55 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Contacts } from './Contacts';
 import { Filter } from './Filter';
 import { Forma } from './Forma';
 import { nanoid } from 'nanoid';
-import {ContainerForm} from "./App.styled"
+import { ContainerForm } from './App.styled';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export const App = () => {
+  const [contacts, setContacts] = useState(
+    () => JSON.parse(window.localStorage.getItem('contacts')) ?? []
+  );
+  const [filter, setFilter] = useState('');
 
-  getVisibleContacts = () => {
-    const normalizedFilter = this.state.filter.toLowerCase();
-    return this.state.contacts.filter(contact =>
+  const getVisibleContacts = () => {
+    const normalizedFilter = filter.toLowerCase();
+    return contacts.filter(contact =>
       contact.name.toLowerCase().includes(normalizedFilter)
     );
   };
 
-  changeFilter = event => {
-    this.setState({ filter: event.currentTarget.value });
+  const changeFilter = event => {
+    setFilter(event.currentTarget.value);
   };
 
-  addContacts = (name, number) => {
+  const addContacts = (name, number) => {
     const contact = {
       id: nanoid(),
       name,
       number,
     };
-    this.setState(pravState => {
-      return { contacts: [contact, ...pravState.contacts] };
-    });
+    setContacts(pravState => [contact, ...pravState]);
   };
 
-  deleteContact = (contactId) => {
-    this.setState(prevState =>({contacts: prevState.contacts.filter(contact => contact.id !== contactId)})
-      
-    )
-  };
-
-  render() {
-    const visiblContacts = this.getVisibleContacts();
-
-    return (
-      <ContainerForm>
-        <h1>Phonebook</h1>
-        <Forma onSubmit={this.addContacts} arr={this.state.contacts} />
-        <h2>Contacts</h2>
-        <Filter value={this.state.filter} onChange={this.changeFilter} />
-        <Contacts
-          contacts={visiblContacts}
-          onDeleteContacts={this.deleteContact}
-        />
-      </ContainerForm>
+  const deleteContact = contactId => {
+    setContacts(prevState =>
+      prevState.filter(contact => contact.id !== contactId)
     );
-  }
-}
+  };
+
+  useEffect(() => {
+    window.localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
+
+  const visiblContacts = getVisibleContacts();
+
+  return (
+    <ContainerForm>
+      <h1>Phonebook</h1>
+      <Forma onSubmit={addContacts} arr={contacts} />
+      <h2>Contacts</h2>
+      <Filter value={filter} onChange={changeFilter} />
+      <Contacts contacts={visiblContacts} onDeleteContacts={deleteContact} />
+    </ContainerForm>
+  );
+};
